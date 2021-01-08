@@ -5,13 +5,12 @@ var ctx = canvas.getContext("2d");
 var ctx1 = canvas1.getContext("2d");
 var cwidth, cheight;
 var randomTime = 0;
-var yArray = [];
-var sum = 0;
-var temp = 0;
-var diff = 0;
+var opacity = 1;
+var grd = ctx.createLinearGradient(0,0,0,canvas.height);
 window.onresize = function(){
   reset();
   insertStars();
+  animate();
 }
 reset();
 function reset(){
@@ -21,26 +20,45 @@ function reset(){
   canvas.height = cheight;
   canvas1.width = cwidth;
   canvas1.height = cheight;
+  grd = ctx1.createLinearGradient(0,0,0,canvas.height);
+  grd.addColorStop(0, "rgba(0,0,0,1)");
+  grd.addColorStop(0.25, "rgba(37, 24, 0,1)");
+  grd.addColorStop(0.5, "rgba(94, 63, 0,1)");
+  grd.addColorStop(0.75, "rgba(166, 108, 1,1)");
+  ctx1.fillStyle = grd;
+  ctx1.fillRect(0, 0, canvas.width, canvas.height);
 }
 function newStar(){
   var star = {};
   star.x = Math.random()*cwidth;
-  star.y = (Math.random()*cheight*0.5);
+  star.y = (Math.random()*cheight*0.8);
   star.radius = (Math.random()*1.5+0.3);
   stars.push(star);
 }
 function insertStars(){
   stars = [];
-  for(let i = 0;i< 250;i++)
+  for(let i = 0;i< 350;i++)
   {
     newStar();
   }
   for(let ix in stars){
     var star = stars[ix];
-    ctx.beginPath();
-    ctx.arc(star.x,star.y,star.radius,0,Math.PI*2);
-    ctx.fillStyle = "#ffffff";
-    ctx.fill();
+    if(star.y < cheight/2)
+    {
+      ctx.beginPath();
+      ctx.arc(star.x,star.y,star.radius,0,Math.PI*2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+      ctx.closePath();
+    }
+    else{
+      ctx.beginPath();
+      ctx.arc(star.x,star.y,star.radius,0,Math.PI*2);
+      opacity = 0.1*(cheight/2)/(star.y - cheight/2);
+      ctx.fillStyle = `rgba(255,255,255,${opacity})`;
+      ctx.fill();
+      ctx.closePath();
+    }
   }
 }
 insertStars();
@@ -56,75 +74,54 @@ function fallingStar(){
   fStar.x = Math.random()*cwidth;
   dt = (fStar.x>cwidth/2) ? -1 : 1;
   yPos = Math.random() > 0.5;
-  fStar.y = cheight/2*(yPos);
-  temp = fStar.y;
+  fStar.y = cheight*(yPos);
   fStar.radius = Math.random()*1.8+0.3;
   ctx1.beginPath();
   ctx1.arc(fStar.x,fStar.y,fStar.radius,0,Math.PI*2);
   ctx1.fillStyle = "#ffffff";
   ctx1.fill();
+  ctx1.closePath();
   animate();
-  sum = 0;
-  diff = 0;
   clearInterval(starTiming);
-  randomTime = Math.random()*4000+4000;
+  randomTime = Math.random()*5000+5000;
   starTiming = setInterval(fallingStar,randomTime);
 }
 function animate(){
   requestId = window.requestAnimationFrame(animate);
+  grd = ctx1.createLinearGradient(0,0,0,canvas.height);
+  grd.addColorStop(0, "rgba(0,0,0,0.12)");
+  grd.addColorStop(0.25, "rgba(37, 24, 0,0.12)");
+  grd.addColorStop(0.5, "rgba(94, 63, 0,0.12)");
+  grd.addColorStop(0.75, "rgba(166, 108, 1,0.2)");
+  ctx1.fillStyle = grd;
+  ctx1.fillRect(0, 0, canvas.width, canvas.height);
   fStar.x += 3*dt;
   if(yPos)
   {
-    fStar.y -= Math.pow((fStar.x*3/cwidth),2);
+    fStar.y -= Math.pow((fStar.x*2/cwidth),2);
   }
   else{
-    fStar.y += Math.pow((fStar.x*3/cwidth),2);
+    fStar.y += Math.pow((fStar.x*2/cwidth),2);
   }
 
-  diff = Math.abs(fStar.y - temp);
-  diff = diff/fStar.y;
-  yArray.push(diff);
-
-  temp = fStar.y;
-
-  if(yArray.length > 5){
-    yArray.pop();
-  }
-  if(yArray.length >= 5)
+  if(fStar.y < cheight/2)
   {
-    for(let i = 0;i<yArray.length;i++)
-    {
-      sum += yArray[i];
-    }
-  }
-    if(dt > 0)
-    {
-      if(!yPos)
-      {
-        ctx1.clearRect(0,0,fStar.x-20,fStar.y-20);
-      }
-      else{
-        ctx1.clearRect(0,0,fStar.x-20,cheight);
-      }
-    }
-    else{
-      if(yPos)
-      {
-        ctx1.clearRect(fStar.x+30,0,cwidth - fStar.x - 30,cheight);
-      }
-      else{
-        ctx1.clearRect(fStar.x+30,0,cwidth-fStar.x-30,cheight);
-      }
-    }
-
-  ctx1.beginPath();
-  ctx1.arc(fStar.x,fStar.y,fStar.radius,0,Math.PI*2);
-  ctx1.fillStyle = "#ffffff";
-  ctx1.fill();
-  if((fStar.y > cheight/2) || (fStar.y < 0) || (fStar.x > cwidth) || (fStar.x < 0)){
-    window.cancelAnimationFrame(requestId);
-    ctx1.clearRect(0,0,cwidth,cheight)
-    ctx1.fillStyle = "#000000";
+    ctx1.beginPath();
+    ctx1.arc(fStar.x,fStar.y,fStar.radius,0,Math.PI*2);
+    ctx1.fillStyle = "#ffffff";
     ctx1.fill();
+    ctx1.closePath();
+  }
+  else
+  {
+    ctx1.beginPath();
+    ctx1.arc(fStar.x,fStar.y,fStar.radius,0,Math.PI*2);
+    opacity = 0.1*cheight*0.5/(fStar.y - cheight/2);
+    ctx1.fillStyle = `rgba(255,255,255,${opacity})`;
+    ctx1.fill();
+    ctx1.closePath();
+  }
+  if((fStar.y > (cheight)+30) || (fStar.y < -30) || (fStar.x > cwidth+30) || (fStar.x < -30)){
+    window.cancelAnimationFrame(requestId);
   }
 }
